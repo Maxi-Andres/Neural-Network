@@ -1,0 +1,6 @@
+# Local virtual environment created by install.bat / install.sh
+.venv/
+
+# Jupyter / Python caches
+.ipynb_checkpoints/
+__pycache__/
