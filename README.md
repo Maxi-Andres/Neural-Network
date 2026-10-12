@@ -2,7 +2,9 @@
 
 A fully connected neural network that recognizes handwritten digits (0–9), **built from scratch with NumPy**. No TensorFlow, no PyTorch, no `model.fit()`. Every step is written out by hand: forward propagation, the activation functions and their derivatives, backpropagation with the chain rule, and gradient descent.
 
-It reaches **~97% accuracy on MNIST**, about the same as scikit-learn's `MLPClassifier` with the same architecture. You can also **draw a digit with the mouse** and watch the network guess it.
+It reaches **96.96% accuracy on MNIST**, close to scikit-learn's `MLPClassifier` with the same architecture. You can also **draw a digit with the mouse** and watch the network guess it.
+
+**Paper:** [`Neural-Network-from-Scratch.pdf`](Neural-Network-from-Scratch.pdf) explains everything in detail: the math, the experiments, a gradient check of the implementation, and how this network compares to large language models.
 
 ![Accuracy over iterations](graphs/accuracy_0.1_32768.png)
 
@@ -25,6 +27,17 @@ bash run.sh
 ```
 
 `run.bat` / `run.sh` will run the installer on their own if you haven't done it yet.
+
+---
+
+## What kind of AI is this?
+
+- **Machine learning → deep learning:** the network isn't given rules for recognizing digits. It learns them from examples, using a neural network with several layers.
+- **Supervised learning:** it learns from images that come with the correct answer (an image of a 7 plus the label "7").
+- **Classification:** the output is one of 10 categories, the digits 0–9.
+- **Multilayer perceptron (MLP):** a feedforward, fully connected network. Information flows one way, from the pixels to the answer.
+
+**How does it compare to a model like Claude (the model behind Claude Code)?** A large language model is a *Transformer* trained to predict the next word on huge amounts of text, with billions of parameters instead of this network's 235,146. But the foundations are the same: every Transformer layer contains an MLP block like this one, the output is also a softmax (over words instead of digits), and it's also trained with cross-entropy, backpropagation and gradient descent. Section 2 of the [paper](Neural-Network-from-Scratch.pdf) has the full comparison.
 
 ---
 
@@ -76,21 +89,23 @@ Then every weight and bias takes a gradient descent step with learning rate $L$:
 
 ## Results
 
-Eighteen models were trained with different learning rates, batch sizes and iteration counts. Some were trained further starting from an earlier model. The best ones:
+Eighteen models were trained with different learning rates, batch sizes and iteration counts. Some were trained further starting from an earlier model. The best ones, evaluated on the full training set (46,666 images) and test set (23,334 images):
 
-| Model       | Learning rate | Batch size | Iterations                    | Test accuracy | Train accuracy |
-| ----------- | ------------- | ---------- | ----------------------------- | ------------- | -------------- |
-| `params_17` | 0.1           | 32,768     | 3,000 (on top of `params_16`) | **96.97%**    | 98.91%         |
-| `params_16` | 0.1           | 32,768     | 4,000                         | 96.47%        | 97.96%         |
-| `params_15` | 0.1           | 16,384     | 4,000                         | ~96%          | ~97%           |
-| `params_14` | 0.08          | 8,192      | 4,000                         | 94.06%        | 99.73%         |
-| `params_13` | 0.03          | 8,192      | 8,000                         | 93.66%        | 98.77%         |
+| Model       | Learning rate | Batch size | Iterations                    | Train accuracy | Test accuracy |
+| ----------- | ------------- | ---------- | ----------------------------- | -------------- | ------------- |
+| `params_17` | 0.1           | 32,768     | 3,000 (on top of `params_16`) | 98.93%         | **96.96%**    |
+| `params_16` | 0.1           | 32,768     | 4,000                         | 97.99%         | 96.45%        |
+| `params_15` | 0.1           | 16,384     | 4,000                         | 97.07%         | 95.52%        |
+| `params_14` | 0.08          | 8,192      | 4,000                         | 95.00%         | 93.84%        |
+| `params_13` | 0.03          | 8,192      | 8,000                         | 94.55%         | 93.39%        |
 
-The full list, with every hyperparameter, is in the comments of `Neural_Network.ipynb`.
+The paper has the full table, the confusion matrix, and the most common mistakes (4 ↔ 9, 8 → 3, 7 → 2).
 
-**Overfitting:** several models reached 100% on the training set but much less on the test set, which means they memorized the training data instead of learning general patterns. Small batches made this worse, and larger batches with fewer iterations helped. `params_15` is the default for the drawing demo because it generalizes better to new handwriting than the models with higher scores.
+**Batch size matters most:** the training loop resets the random seed every iteration, so it always trains on the *same* batch of images. With small batches the network memorizes those few images (100% on them) and does poorly on the rest. That is why test accuracy grows from 66% with a batch of 128 to 96.5% with 32,768.
 
-**NumPy vs scikit-learn:** an `MLPClassifier` with the same `(256, 128)` layers reached **97.0–97.6%**, almost the same as the hand-written network, but it trained much faster. Writing it by hand gives you full control and shows you exactly what is going on. The library gives you speed.
+**Hand-drawn digits:** `params_15` is the default for the drawing demo because it recognized all 10 hand-drawn digits in `digits/`, while `params_17` read the 1 as a 4.
+
+**NumPy vs scikit-learn:** an `MLPClassifier` with the same `(256, 128)` layers reached **97.58%** in 48 seconds. The hand-written network computes just as fast per image, but plain gradient descent on one big batch needs far more work than scikit-learn's mini-batches with momentum.
 
 ---
 
@@ -127,9 +142,9 @@ The first time, MNIST is downloaded from OpenML (about 15 MB) and cached.
 ├── graphs/                 # Accuracy plots for each training run
 ├── digits/                 # Hand-drawn digits for testing
 ├── DATA/                   # MNIST / EMNIST datasets (CSV)
+├── paper/                  # Paper source (Typst), figures and references
+├── Neural-Network-from-Scratch.pdf   # The paper
 ├── requirements.txt        # Dependencies
 ├── install.bat / .sh       # Creates .venv and installs dependencies
 └── run.bat / .sh           # Opens the main notebook
 ```
-
-The full write-up (in Spanish), with the math derivations and the analysis, is in `Proyecto Final - Matemática III.pdf`.
